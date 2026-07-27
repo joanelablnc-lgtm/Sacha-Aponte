@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Misión Azure - Registro de Astronautas</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: white; text-align: center; padding: 20px; }
+    .card { background-color: #1e293b; border-radius: 12px; padding: 25px; max-width: 450px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { color: #38bdf8; margin-bottom: 5px; }
+    p { color: #94a3b8; font-size: 14px; }
+    input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+    button { background-color: #0284c7; color: white; font-weight: bold; cursor: pointer; border: none; margin-top: 15px; transition: 0.3s; }
+    button:hover { background-color: #0369a1; }
+    .badge { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 8px; border: 2px dashed #38bdf8; display: none; }
+    .badge img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #38bdf8; margin-top: 10px; }
+  </style>
+</head>
+<body>
+ 
+  <div class="card">
+    <h1>🚀 Misión Azure</h1>
+    <p>Registro Oficial de Astronautas</p>
+    
+    <form id="astroForm">
+      <input type="text" id="nombre" placeholder="Nombre del Astronauta" required>
+      <select id="rango">
+        <option value="Comandante">Comandante</option>
+        <option value="Especialista de Misión">Especialista de Misión</option>
+        <option value="Ingeniero de Vuelo">Ingeniero de Vuelo</option>
+      </select>
+      <input type="file" id="foto" accept="image/*" required>
+      <button type="submit" id="btnEnviar">🚀 Registrar en la Nube</button>
+    </form>
+ 
+    <div id="badge" class="badge">
+      <h3 style="color: #4ade80; margin: 0;">¡Registro Exitoso!</h3>
+      <img id="badgeImg" src="" alt="Foto Astronauta">
+      <h2 id="badgeNombre" style="margin: 10px 0 5px 0;"></h2>
+      <p id="badgeRango" style="color: #38bdf8; font-weight: bold; margin: 0;"></p>
+    </div>
+  </div>
+ 
+  <script>
+    // =========================================================================
+    // ⚙️ CONFIGURACIÓN DE AZURE (Los alumnos deben completar estos campos)
+    // =========================================================================
+    const STORAGE_ACCOUNT_NAME = "joanelaazure";
+    const CONTAINER_NAME = "astronautas";
+    // Generar un SAS Token en el portal de Azure para el contenedor con permiso de Escritura (Create/Write)
+    const SAS_TOKEN = "14ljWgKlZETDNvYp3iD2FXj8dfW1cOUuuUx3MoaWSjLqjAP8cgvziTxeuZjqJLllUyKruUyWEgk3+AStfan1sA=="; 
+    // =========================================================================
+ 
+    document.getElementById('astroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btnEnviar');
+      btn.innerText = "Subiendo a Azure Storage...";
+      btn.disabled = true;
+ 
+      const nombre = document.getElementById('nombre').value;
+      const rango = document.getElementById('rango').value;
+      const fileInput = document.getElementById('foto');
+      const file = fileInput.files[0];
+ 
+      if (!file) return;
+ 
+      // 1. Crear un nombre único para la imagen en el Blob Storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const blobUrl = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${CONTAINER_NAME}/${fileName}`;
+      const uploadUrl = `${blobUrl}?${SAS_TOKEN}`;
+ 
+      try {
+        // 2. Subir la foto directamente a Azure Blob Storage usando la API REST
+        const response = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'x-ms-blob-type': 'BlockBlob',
+            'Content-Type': file.type
+          },
+          body: file
+        });
+ 
+        if (response.ok) {
+          // 3. Mostrar el carnet generado con la URL directa de la foto alojada en la nube
+          document.getElementById('badgeImg').src = blobUrl;
+          document.getElementById('badgeNombre').innerText = nombre;
+          document.getElementById('badgeRango').innerText = `Rango: ${rango}`;
+          document.getElementById('badge').style.display = 'block';
+          document.getElementById('astroForm').style.display = 'none';
+        } else {
+          alert("Error al subir a Azure Storage. Revisa la configuración del SAS Token o CORS.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Error de conexión con Azure Storage.");
+      } finally {
+        btn.innerText = "🚀 Registrar en la Nube";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
