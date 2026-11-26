@@ -195,6 +195,7 @@ app_mcp = servidor_mcp.streamable_http_app(
         enable_dns_rebinding_protection=True,
         allowed_hosts=[
             "sacha-aponte-modelo.onrender.com",
+            "sacha-aponte-modelo.onrender.com:*",
             "127.0.0.1:*",
             "localhost:*",
         ],
