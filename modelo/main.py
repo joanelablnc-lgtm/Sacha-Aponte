@@ -134,17 +134,24 @@ def buscar_compras(
     }
     parametros = {"select": "*", "limit": "50"}
     if proveedor:
-        parametros["proveedor"] = f"ilike.*{proveedor}*"
+        proveedor_columna = os.getenv("SUPABASE_PROVIDER_COLUMN", "Proveedor")
+        parametros[proveedor_columna] = f"ilike.*{proveedor}*"
     if categoria:
-        parametros["categoria"] = f"ilike.*{categoria}*"
+        categoria_columna = os.getenv(
+            "SUPABASE_CATEGORY_COLUMN",
+            "Descripcion_categoria",
+        )
+        parametros[categoria_columna] = f"ilike.*{categoria}*"
     if estado:
-        parametros["estado"] = f"ilike.*{estado}*"
+        estado_columna = os.getenv("SUPABASE_STATUS_COLUMN", "Tipo_pedido")
+        parametros[estado_columna] = f"ilike.*{estado}*"
 
     try:
         with httpx.Client(timeout=30) as cliente:
             consulta = [(clave, valor) for clave, valor in parametros.items()]
-            consulta.append(("importe_eur", f"gte.{importe_minimo}"))
-            consulta.append(("importe_eur", f"lte.{importe_maximo}"))
+            importe_columna = os.getenv("SUPABASE_AMOUNT_COLUMN", "Importe")
+            consulta.append((importe_columna, f"gte.{importe_minimo}"))
+            consulta.append((importe_columna, f"lte.{importe_maximo}"))
             respuesta = cliente.get(
                 f"{url.rstrip('/')}/rest/v1/{tabla}",
                 headers=cabeceras,
