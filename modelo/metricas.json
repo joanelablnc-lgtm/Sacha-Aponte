@@ -1,0 +1,16 @@
+{
+  "objetivo": "importe_eur",
+  "unidad": "EUR",
+  "tipo": "regresion",
+  "pistas": [
+    "cantidad",
+    "proveedor",
+    "categoria",
+    "estado"
+  ],
+  "error_ingenuo_mae_eur": 962.96,
+  "error_modelo_mae_eur": 1207.3,
+  "filas_aprendizaje": 40,
+  "filas_examen": 10,
+  "random_state": 42
+}
