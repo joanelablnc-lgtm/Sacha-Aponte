@@ -104,6 +104,16 @@ def buscar_compras(
             "error": "Faltan SUPABASE_URL y SUPABASE_KEY",
             "filas": [],
         }
+    if key.startswith("sb_secret_") or "service_role" in key:
+        return {
+            "error": "SUPABASE_KEY debe ser publicable; no se admite una clave secreta",
+            "filas": [],
+        }
+    if importe_maximo < importe_minimo:
+        return {
+            "error": "importe_maximo debe ser mayor o igual que importe_minimo",
+            "filas": [],
+        }
 
     import httpx
 
@@ -119,14 +129,28 @@ def buscar_compras(
     if estado:
         parametros["estado"] = f"ilike.*{estado}*"
 
-    with httpx.Client(timeout=30) as cliente:
-        respuesta = cliente.get(
-            f"{url.rstrip('/')}/rest/v1/{tabla}",
-            headers=cabeceras,
-            params={**parametros, "importe_eur": f"gte.{importe_minimo}"},
-        )
-        respuesta.raise_for_status()
-        filas = respuesta.json()
+    try:
+        with httpx.Client(timeout=30) as cliente:
+            consulta = [(clave, valor) for clave, valor in parametros.items()]
+            consulta.append(("importe_eur", f"gte.{importe_minimo}"))
+            consulta.append(("importe_eur", f"lte.{importe_maximo}"))
+            respuesta = cliente.get(
+                f"{url.rstrip('/')}/rest/v1/{tabla}",
+                headers=cabeceras,
+                params=consulta,
+            )
+            respuesta.raise_for_status()
+            filas = respuesta.json()
+    except httpx.HTTPStatusError as exc:
+        return {
+            "error": f"Supabase rechazó la consulta: HTTP {exc.response.status_code}",
+            "filas": [],
+        }
+    except httpx.RequestError as exc:
+        return {
+            "error": f"No se pudo consultar Supabase: {type(exc).__name__}",
+            "filas": [],
+        }
     return {"filas": filas[:50]}
 
 

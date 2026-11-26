@@ -317,6 +317,36 @@
         font-weight: 800;
       }
 
+      .prediction-form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .prediction-form label {
+        display: grid;
+        gap: 5px;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .prediction-form input {
+        min-height: 42px;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: var(--ink);
+        background: white;
+      }
+
+      .prediction-result {
+        min-height: 24px;
+        margin: 0;
+        color: var(--blue-dark);
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
       .section {
         padding-block: 76px;
       }
@@ -541,31 +571,26 @@
           <div class="preview">
             <div class="preview-head">
               <p class="preview-title">Análisis de cotización</p>
-              <span class="preview-label">Vista conceptual</span>
+              <span class="preview-label">Modelo publicado</span>
             </div>
             <div class="preview-body">
-              <div class="quote">
-                <span class="quote-icon" aria-hidden="true">↗</span>
-                <div>
-                  <strong>Nueva cotización</strong>
-                  <small>El análisis estará disponible en una próxima fase</small>
-                </div>
-              </div>
-              <div class="metric-list">
-                <div class="metric">
-                  <span>Servicios comparables</span>
-                  <span class="pending">Pendiente</span>
-                </div>
-                <div class="metric">
-                  <span>Coste esperado</span>
-                  <span class="pending">Pendiente</span>
-                </div>
-                <div class="metric">
-                  <span>Posibles desviaciones</span>
-                  <span class="pending">Pendiente</span>
-                </div>
-              </div>
-              <div class="preview-foot"><span aria-hidden="true">i</span>Sin datos reales ni resultados simulados</div>
+              <form class="prediction-form" id="prediction-form">
+                <label>Cantidad
+                  <input name="cantidad" type="number" min="1" max="100000" value="14" required>
+                </label>
+                <label>Proveedor
+                  <input name="proveedor" value="Proveedor Este" maxlength="100" required>
+                </label>
+                <label>Categoría
+                  <input name="categoria" value="Servicios" maxlength="100" required>
+                </label>
+                <label>Estado
+                  <input name="estado" value="Pendiente" maxlength="100" required>
+                </label>
+                <button class="button" type="submit">Predecir importe</button>
+                <p class="prediction-result" id="prediction-result" role="status"></p>
+              </form>
+              <div class="preview-foot"><span aria-hidden="true">i</span>Predicción orientativa; no sustituye el criterio de Compras.</div>
             </div>
           </div>
         </div>
@@ -623,5 +648,37 @@
       <p>Procurement Intelligence AI · Proyecto académico en desarrollo</p>
       <p>Estimaciones orientativas; la decisión final corresponde a Compras.</p>
     </footer>
+    <script>
+      const form = document.querySelector("#prediction-form");
+      const result = document.querySelector("#prediction-result");
+      const API_URL = "https://sacha-aponte-modelo.onrender.com";
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        result.textContent = "Despertando el modelo, puede tardar un minuto...";
+        const data = new FormData(form);
+        const body = {
+          cantidad: Number(data.get("cantidad")),
+          proveedor: data.get("proveedor"),
+          categoria: data.get("categoria"),
+          estado: data.get("estado")
+        };
+
+        try {
+          const response = await fetch(`${API_URL}/predict`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const prediction = await response.json();
+          result.textContent =
+            `Estimación: ${prediction.prediccion_eur.toLocaleString("es-ES")} EUR · ` +
+            `error medio: ${prediction.error_medio_eur.toLocaleString("es-ES")} EUR`;
+        } catch (error) {
+          result.textContent = "No se pudo consultar el modelo. Comprueba la conexión e inténtalo de nuevo.";
+        }
+      });
+    </script>
   </body>
 </html>
