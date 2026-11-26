@@ -8,6 +8,7 @@ import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mcp.server import MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -189,5 +190,19 @@ def predecir_importe(
 
 app_mcp = servidor_mcp.streamable_http_app(
     streamable_http_path="/",
+    host="0.0.0.0",
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[
+            "sacha-aponte-modelo.onrender.com",
+            "127.0.0.1:*",
+            "localhost:*",
+        ],
+        allowed_origins=[
+            "https://web-omega-six-v7c2vgocas.vercel.app",
+            "http://127.0.0.1:*",
+            "http://localhost:*",
+        ],
+    ),
 )
 app.mount("/mcp", app_mcp)
