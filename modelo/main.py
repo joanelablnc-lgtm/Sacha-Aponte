@@ -1,5 +1,6 @@
 import json
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import joblib
@@ -57,6 +58,15 @@ def predict(datos: PrediccionInput):
         "prediccion_eur": round(importe, 2),
         "error_medio_eur": metricas["error_modelo_mae_eur"],
     }
+
+
+@asynccontextmanager
+async def lifespan(app):
+    async with app_mcp.router.lifespan_context(app_mcp):
+        yield
+
+
+app.router.lifespan_context = lifespan
 
 
 class PideToken(BaseHTTPMiddleware):
