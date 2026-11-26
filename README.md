@@ -17,3 +17,4 @@ La app Python está en `modelo/`. El modelo y las métricas se incluyen en el re
 - `/mcp` rechaza peticiones sin token con HTTP 401.
 - La prueba local `modelo/test_api.py` verifica `/health`, `/info`, `/predict` y el rechazo sin token de `/mcp`.
 - `buscar_compras` usa la clave publicable de Supabase y respeta RLS; no acepta claves `service_role` ni `sb_secret_`.
+- Prueba MCP local: ambas herramientas aparecen y `predecir_importe` responde; el MCP publicado todavía requiere resolución del despliegue porque `/mcp/` devuelve 500.
